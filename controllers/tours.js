@@ -1,60 +1,86 @@
 const Tours = require('../models/tours');
 
-// body check middleware
-exports.bodyCheck = (req, res, next) => {
-  if (!req.body.name || !req.body.price) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Please insert name and price'
-    });
-  }
-  next();
-};
-
 exports.getAllTours = (req, res) => {
-  // res.status(200).json({
-  //   status: 'success',
-  //   time: req.reqTime,
-  //   results: tours.length,
-  //   data: tours
-  // });
+  Tours.find()
+    .then(data => {
+      res.status(200).json({
+        status: 'success',
+        data
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        status: 'error',
+        message: err
+      });
+    });
 };
 
 exports.getTourById = (req, res) => {
-  // const id = req.params.id;
-  // const tour = tours.find(data => data.id == id);
-  // res.status(200).json({
-  //   status: 'success',
-  //   time: req.reqTime,
-  //   data: tour
-  // });
+  const { id } = req.params;
+
+  Tours.findById(id)
+    .then(data => {
+      res.status(200).json({
+        status: 'success',
+        data
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        status: 'error',
+        message: err
+      });
+    });
 };
 
-exports.postTour = (req, res) => {
-  // const newId = tours[tours.length - 1].id + 1;
-  // const newData = Object.assign({ id: newId }, req.body);
-  // tours.push(newData);
-  // fs.writeFile(
-  //   `${__dirname}/dev-data/data/tours-simple.json`,
-  //   JSON.stringify(tours),
-  //   () => {
-  //     res.status(201).json({
-  //       status: 'success',
-  //       time: req.reqTime,
-  //       data: newData
-  //     });
-  //   }
-  // );
+exports.postTour = async (req, res) => {
+  Tours.create(req.body)
+    .then(data => {
+      res.status(201).json({
+        status: 'success',
+        data
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        status: 'error',
+        message: err
+      });
+    });
 };
 
 exports.updateTour = (req, res) => {
-  //
+  const { id } = req.params;
+
+  Tours.findByIdAndUpdate(id, req.body, { new: true, runValidators: true })
+    .then(data => {
+      res.status(201).json({
+        status: 'success',
+        data
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        status: 'error',
+        message: err
+      });
+    });
 };
 
 exports.deleteTour = (req, res) => {
-  // res.status(500).json({
-  //   status: 'error',
-  //   time: req.reqTime,
-  //   message: 'route not available'
-  // });
+  const { id } = req.params;
+
+  Tours.findByIdAndDelete(id)
+    .then(() => {
+      res.status(202).json({
+        status: 'success'
+      });
+    })
+    .catch(err => {
+      res.status(400).json({
+        status: 'error',
+        message: err
+      });
+    });
 };

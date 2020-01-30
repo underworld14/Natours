@@ -12,7 +12,7 @@ const toursControllers = require('../controllers/tours');
 router
   .route('/')
   .get(toursControllers.getAllTours)
-  .post(toursControllers.bodyCheck, toursControllers.postTour); //body check middleware
+  .post(toursControllers.postTour);
 
 router
   .route('/:id')
