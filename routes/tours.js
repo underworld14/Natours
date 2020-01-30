@@ -1,22 +1,23 @@
-const express = require("express");
+const express = require('express');
 
 const router = express.Router();
 
 // require the controllers
-const toursControllers = require("../controllers/tours");
+const toursControllers = require('../controllers/tours');
 
 // params middleware
-router.param("id", toursControllers.checkId);
+// router.param("id", toursControllers.checkId);
 
 // our routes here
 router
-  .route("/")
+  .route('/')
   .get(toursControllers.getAllTours)
-  .post(toursControllers.bodyCheck, toursControllers.postTours); //body check middleware
+  .post(toursControllers.bodyCheck, toursControllers.postTour); //body check middleware
 
 router
-  .route("/:id")
+  .route('/:id')
   .get(toursControllers.getTourById)
+  .patch(toursControllers.updateTour)
   .delete(toursControllers.deleteTour);
 
 module.exports = router;

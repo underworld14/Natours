@@ -6,6 +6,7 @@ dotenv.config({ path: './config.env' });
 
 const { DATABASE } = process.env;
 
+// connecting to database
 mongoose
   .connect(DATABASE, {
     useNewUrlParser: true,
