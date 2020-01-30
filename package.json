@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon server.js",
-    "production": "NODE_ENV=production node server.js"
+    "production": "NODE_ENV=production node server.js",
+    "import-db": "node dev-data/data/import-dev-data.js --import",
+    "delete-db": "node dev-data/data/import-dev-data.js --delete"
   },
   "keywords": [],
   "author": "Yusril Izza Aulia",
