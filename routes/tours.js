@@ -15,6 +15,10 @@ router
   .post(toursControllers.postTour);
 
 router
+  .route('/top-cheap')
+  .get(toursControllers.aliasTopCheaps, toursControllers.getAllTours);
+
+router
   .route('/:id')
   .get(toursControllers.getTourById)
   .patch(toursControllers.updateTour)
