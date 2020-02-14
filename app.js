@@ -3,9 +3,9 @@ const morgan = require('morgan');
 
 const app = express();
 
+// router - controller - handler
 const AppError = require('./utils/appError');
-
-// router
+const globalError = require('./controllers/errorHandler');
 const toursRouter = require('./routes/tours');
 
 // middleware
@@ -30,16 +30,6 @@ app.all('*', (req, res, next) => {
 });
 
 // global error handling middleware
-app.use((err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
-
-  res.status(err.statusCode).json({
-    status: err.status,
-    message: err.message
-  });
-
-  next();
-});
+app.use(globalError);
 
 module.exports = app;
