@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 // require the controllers
-const toursControllers = require('../controllers/tours');
+const toursControllers = require('../controllers/tourControllers');
 
 // params middleware
 // router.param("id", toursControllers.checkId);

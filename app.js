@@ -6,7 +6,8 @@ const app = express();
 // router - controller - handler
 const AppError = require('./utils/appError');
 const globalError = require('./controllers/errorHandler');
-const toursRouter = require('./routes/tours');
+const toursRouter = require('./routes/tourRoutes');
+const authRouter = require('./routes/authRoutes');
 
 // middleware
 if (process.env.NODE_ENV !== 'production') {
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 
 // declare route
 app.use('/api/v1/tours', toursRouter);
+app.use('/api/v1/auth', authRouter);
 
 // ERROR 404 page not found error handling
 app.all('*', (req, res, next) => {
