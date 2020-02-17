@@ -14,6 +14,11 @@ const usersScheema = new mongoose.Schema({
     lowercase: true,
     validate: [validator.isEmail, 'Please enter a valid email']
   },
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user'
+  },
   password: {
     type: String,
     required: [true, 'Password is required !'],
@@ -30,11 +35,20 @@ const usersScheema = new mongoose.Schema({
       message: 'Password and password confirm must same !'
     }
   },
-  photo: String
+  photo: String,
+  changedAt: Date
 });
 
+// users methods
 usersScheema.methods.testPassword = async function(newPass, userPass) {
   return await bcrypt.compare(newPass, userPass);
+};
+
+usersScheema.methods.testUpdatePassword = function(jwtTimeStamp) {
+  const userTimeStamp = parseInt(this.changedAt.getTime() / 1000, 10);
+
+  // false mean password not changed
+  return jwtTimeStamp < userTimeStamp;
 };
 
 // documents middleware
@@ -45,6 +59,17 @@ usersScheema.pre('save', async function(next) {
   // hashing password with bcrypt
   this.password = await bcrypt.hash(this.password, 12);
   this.confirmPassword = undefined;
+  next();
+});
+
+usersScheema.pre('save', function(next) {
+  this.changedAt = new Date() - 1000;
+  next();
+});
+
+usersScheema.pre('update', function(next) {
+  this.changedAt = new Date();
+  next();
 });
 
 const Users = mongoose.model('Users', usersScheema);

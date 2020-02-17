@@ -12,6 +12,16 @@ const duplicateErr = err => {
   return new AppError(message, 400);
 };
 
+const jwtError = err => {
+  const message = `${err.message}, please login again !`;
+  return new AppError(message, 401);
+};
+
+const jwtExpired = err => {
+  const message = `${err.message}, please login again !`;
+  return new AppError(message, 401);
+};
+
 module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
@@ -28,6 +38,8 @@ module.exports = (err, req, res, next) => {
 
     if (error.name === 'ValidationError') error = validatorErr(error);
     if (error.code === 11000) error = duplicateErr(error);
+    if (error.name === 'JsonWebTokenError') error = jwtError(error);
+    if (error.name === 'TokenExpiredError') error = jwtExpired(error);
 
     if (error.isOperational) {
       // operational trusted err to send to the client
