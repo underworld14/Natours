@@ -90,5 +90,8 @@ exports.protected = catchAsync(async (req, res, next) => {
       )
     );
   }
+
+  // grant access to user
+  req.user = user;
   next();
 });
