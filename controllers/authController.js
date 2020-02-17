@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const Users = require('../models/usersModel');
 const catchAsync = require('../utils/catchAsync');
 const AppErr = require('../utils/appError');
+const sendEmail = require('../utils/mailer');
 
 const generateToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -14,6 +15,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
   const data = await Users.create({
     name: req.body.name,
     email: req.body.email,
+    role: req.body.role,
     password: req.body.password,
     confirmPassword: req.body.confirmPassword
   });
@@ -57,6 +59,45 @@ exports.signIn = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const user = await Users.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(new AppErr('There is no user with that email !', 404));
+  }
+
+  const resetToken = user.createResetPassword();
+  await user.save({ validateBeforeSave: false });
+
+  // send a email
+  const resetUrl = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/auth/resetPassword/${resetToken}`;
+
+  const message = `Forgot your password ? submit a PATCH with yout new password and password confirm to ${resetUrl}`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'Password reset token valid for 10 min',
+      message
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Reset Password sucessfull sent to your email !'
+    });
+  } catch (error) {
+    user.resetToken = undefined;
+    user.resetTokenExp = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return new AppErr('Email sent verification failed', 500);
+  }
+});
+
+exports.resetPassword = (req, res, next) => {};
+
 exports.protected = catchAsync(async (req, res, next) => {
   // get the tokens
   let token;
@@ -95,3 +136,15 @@ exports.protected = catchAsync(async (req, res, next) => {
   req.user = user;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppErr('You dont have a permission to perform this action', 403)
+      );
+    }
+
+    next();
+  };
+};

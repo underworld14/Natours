@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
@@ -35,6 +36,8 @@ const usersScheema = new mongoose.Schema({
       message: 'Password and password confirm must same !'
     }
   },
+  resetToken: String,
+  resetTokenExp: Date,
   photo: String,
   changedAt: Date
 });
@@ -51,6 +54,19 @@ usersScheema.methods.testUpdatePassword = function(jwtTimeStamp) {
   return jwtTimeStamp < userTimeStamp;
 };
 
+usersScheema.methods.createResetPassword = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  this.resetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.resetTokenExp = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
+};
+
 // documents middleware
 usersScheema.pre('save', async function(next) {
   // ONLY RUN this is password was actualy modified
@@ -63,12 +79,12 @@ usersScheema.pre('save', async function(next) {
 });
 
 usersScheema.pre('save', function(next) {
-  this.changedAt = new Date() - 1000;
+  this.changedAt = Date.now() - 1000;
   next();
 });
 
 usersScheema.pre('update', function(next) {
-  this.changedAt = new Date();
+  this.changedAt = Date.now();
   next();
 });
 
