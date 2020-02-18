@@ -66,37 +66,56 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     return next(new AppErr('There is no user with that email !', 404));
   }
 
-  const resetToken = user.createResetPassword();
-  await user.save({ validateBeforeSave: false });
+  const resetToken = user.createResetPassword(user._id);
 
   // send a email
   const resetUrl = `${req.protocol}://${req.get(
     'host'
   )}/api/v1/auth/resetPassword/${resetToken}`;
 
-  const message = `Forgot your password ? submit a PATCH with yout new password and password confirm to ${resetUrl}`;
+  const message = `Forgot your password ?, submit a PATCH with yout new password and password confirm to ${resetUrl}`;
 
-  try {
-    await sendEmail({
-      email: user.email,
-      subject: 'Password reset token valid for 10 min',
-      message
-    });
+  await sendEmail({
+    email: user.email,
+    subject: 'Password reset token valid for 30 min',
+    message
+  }).catch(() => {
+    return next(
+      new AppErr(
+        'Email verification sent failed, please try again later !',
+        500
+      )
+    );
+  });
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Reset Password sucessfull sent to your email !'
-    });
-  } catch (error) {
-    user.resetToken = undefined;
-    user.resetTokenExp = undefined;
-    await user.save({ validateBeforeSave: false });
-
-    return new AppErr('Email sent verification failed', 500);
-  }
+  res.status(200).json({
+    status: 'success',
+    message: 'Reset Password sucessfull sent to your email !'
+  });
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const decodedToken = await promisify(jwt.verify)(
+    req.params.token,
+    'secretPassword'
+  );
+
+  const user = await Users.findById(decodedToken.id);
+
+  if (!user) {
+    return next(new AppErr('Your request token is invalid !', 401));
+  }
+
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  await user.save();
+
+  res.status(201).json({
+    status: 'success',
+    message: 'Password sucessfull reseted',
+    user
+  });
+});
 
 exports.protected = catchAsync(async (req, res, next) => {
   // get the tokens

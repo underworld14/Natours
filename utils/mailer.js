@@ -3,17 +3,17 @@ const nodemailer = require('nodemailer');
 const sendMail = async options => {
   // create transporter
   const transporter = nodemailer.createTransport({
-    host: 'smtp.mailtrap.io',
-    port: 465,
+    host: process.env.EMAIL_HOST,
+    port: Number(process.env.EMAIL_PORT),
     auth: {
-      user: '19d61131a282c1',
-      pass: '472e9d337fef72'
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD
     }
   });
 
   // configure options
   const mailOptions = {
-    from: 'Natours Agency <hello@jonas.io>',
+    from: 'Natours Agency <zaulsr14@gmail.com>',
     to: options.email,
     subject: options.subject,
     text: options.message

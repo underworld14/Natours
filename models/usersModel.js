@@ -1,7 +1,8 @@
-const crypto = require('crypto');
+// const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const usersScheema = new mongoose.Schema({
   name: {
@@ -54,15 +55,17 @@ usersScheema.methods.testUpdatePassword = function(jwtTimeStamp) {
   return jwtTimeStamp < userTimeStamp;
 };
 
-usersScheema.methods.createResetPassword = function() {
-  const resetToken = crypto.randomBytes(32).toString('hex');
+usersScheema.methods.createResetPassword = function(id) {
+  // const resetToken = crypto.randomBytes(32).toString('hex');
 
-  this.resetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
+  // this.resetToken = await bcrypt.hash(resetToken, 4);
+  // this.resetTokenExp = Date.now() + 10 * 60 * 1000;
 
-  this.resetTokenExp = Date.now() + 10 * 60 * 1000;
+  // return resetToken;
+
+  const resetToken = jwt.sign({ id }, 'secretPassword', {
+    expiresIn: 1000 * 60 * 30
+  });
 
   return resetToken;
 };
@@ -84,7 +87,7 @@ usersScheema.pre('save', function(next) {
 });
 
 usersScheema.pre('update', function(next) {
-  this.changedAt = Date.now();
+  this.changedAt = Date.now() - 1000;
   next();
 });
 
