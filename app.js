@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -13,6 +14,13 @@ const authRouter = require('./routes/authRoutes');
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
+
+const limiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 100
+});
+
+app.use('/api', limiter);
 
 app.use(express.json());
 app.use(express.static(`${__dirname}/public`));
