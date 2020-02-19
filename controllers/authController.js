@@ -11,8 +11,20 @@ const generateToken = id => {
   });
 };
 
+const sendTokenCookie = (res, token) => {
+  const cookieOptions = {
+    expires: new Date(Date.now() + Number(process.env.JWT_EXPIRES_COOKIE)),
+    secure: false,
+    httpOnly: true
+  };
+
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+  res.cookie('jwt', token, cookieOptions);
+};
+
 exports.signUp = catchAsync(async (req, res, next) => {
-  const data = await Users.create({
+  const user = await Users.create({
     name: req.body.name,
     email: req.body.email,
     role: req.body.role,
@@ -20,12 +32,15 @@ exports.signUp = catchAsync(async (req, res, next) => {
     confirmPassword: req.body.confirmPassword
   });
 
-  const token = generateToken(data._id);
+  const token = generateToken(user._id);
+  sendTokenCookie(res, token);
+  // remove password from the response
+  user.password = undefined;
 
   res.status(201).json({
     status: 'success',
     token,
-    data
+    user
   });
 });
 
@@ -47,14 +62,14 @@ exports.signIn = catchAsync(async (req, res, next) => {
 
   // if everything ok sent it to the client
   const token = generateToken(user._id);
+  sendTokenCookie(res, token);
+
+  // remove password from the response
+  user.password = undefined;
+
   res.status(200).json({
     status: 'success',
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      photo: user.photo
-    },
+    user,
     token
   });
 });
@@ -73,6 +88,9 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     runValidators: false,
     new: true
   });
+
+  // remove password from the response
+  user.password = undefined;
 
   res.status(201).json({
     status: 'success',
