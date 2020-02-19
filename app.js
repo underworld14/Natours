@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
@@ -11,10 +12,15 @@ const toursRouter = require('./routes/tourRoutes');
 const authRouter = require('./routes/authRoutes');
 
 // middleware
+// http secure headers
+app.use(helmet());
+
+// development logger
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
+// rate limiter
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 100
@@ -22,6 +28,7 @@ const limiter = rateLimit({
 
 app.use('/api', limiter);
 
+// body parser
 app.use(express.json());
 app.use(express.static(`${__dirname}/public`));
 
