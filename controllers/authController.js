@@ -59,6 +59,52 @@ exports.signIn = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getMe = catchAsync(async (req, res, next) => {
+  const user = await Users.findById(req.user._id);
+
+  res.status(200).json({
+    message: 'success',
+    user
+  });
+});
+
+exports.updateUser = catchAsync(async (req, res, next) => {
+  const user = await Users.findByIdAndUpdate(req.user._id, req.body, {
+    runValidators: false,
+    new: true
+  });
+
+  res.status(201).json({
+    status: 'success',
+    message: 'Users successfull updated',
+    user
+  });
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const { oldPassword, newPassword, confirmNewPassword } = req.body;
+  // check curent password and inputed password
+  const user = await Users.findById(req.user._id).select('+password');
+  const checkPassword = await user.testPassword(oldPassword, user.password);
+
+  // check curent password and inputed password
+  if (!checkPassword) {
+    return next(new AppErr('your password is not match'));
+  }
+
+  user.password = newPassword;
+  user.confirmPassword = confirmNewPassword;
+  await user.save();
+
+  const token = generateToken(user._id);
+
+  res.status(201).json({
+    status: 'success',
+    message: 'Password successfull updated',
+    token
+  });
+});
+
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   const user = await Users.findOne({ email: req.body.email });
 
@@ -69,23 +115,16 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetToken = user.createResetPassword(user._id);
 
   // send a email
-  const resetUrl = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/auth/resetPassword/${resetToken}`;
+  const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
 
   const message = `Forgot your password ?, submit a PATCH with yout new password and password confirm to ${resetUrl}`;
 
   await sendEmail({
     email: user.email,
-    subject: 'Password reset token valid for 30 min',
+    subject: 'Password reset token valid for 10 min',
     message
   }).catch(() => {
-    return next(
-      new AppErr(
-        'Email verification sent failed, please try again later !',
-        500
-      )
-    );
+    return next(new AppErr('Email verification sent failed, please try again later !', 500));
   });
 
   res.status(200).json({
@@ -95,10 +134,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 });
 
 exports.resetPassword = catchAsync(async (req, res, next) => {
-  const decodedToken = await promisify(jwt.verify)(
-    req.params.token,
-    'secretPassword'
-  );
+  const decodedToken = await promisify(jwt.verify)(req.params.token, 'secretPassword');
 
   const user = await Users.findById(decodedToken.id);
 
@@ -112,18 +148,36 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   res.status(201).json({
     status: 'success',
-    message: 'Password sucessfull reseted',
+    message: 'Password sucessfull reseted, please login again',
     user
+  });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  console.log('enter this function');
+  const { password } = req.body;
+
+  const user = await Users.findById(req.user._id).select('+password');
+  const checkPassword = await user.testPassword(password, user.password);
+
+  // check curent password and inputed password
+  if (!checkPassword) {
+    return next(new AppErr('your password confirmation is incorrect !', 400));
+  }
+
+  user.active = false;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(201).json({
+    status: 'success',
+    message: 'action success'
   });
 });
 
 exports.protected = catchAsync(async (req, res, next) => {
   // get the tokens
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
   if (!token) {
@@ -132,24 +186,24 @@ exports.protected = catchAsync(async (req, res, next) => {
 
   // verify the tokens
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  // console.log(decoded);
 
   // check if the user is available
   const user = await Users.findById(decoded.id);
+
   if (!user) {
     next(new AppErr('Users is not available, please try login again !', 401));
   }
 
-  // check if user not changet the password
-  const isChanged = user.testUpdatePassword(decoded.iat);
-  if (isChanged) {
-    next(
-      new AppErr(
-        'Users was actualy changed the password, please try login again !',
-        401
-      )
-    );
-  }
+  // check if user actualy the password // feature not available
+  // const isChanged = user.testUpdatePassword(decoded.iat);
+  // if (isChanged) {
+  //   next(
+  //     new AppErr(
+  //       'Users was actualy changed the password, please try login again !',
+  //       401
+  //     )
+  //   );
+  // }
 
   // grant access to user
   req.user = user;
@@ -159,9 +213,7 @@ exports.protected = catchAsync(async (req, res, next) => {
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(
-        new AppErr('You dont have a permission to perform this action', 403)
-      );
+      return next(new AppErr('You dont have a permission to perform this action', 403));
     }
 
     next();

@@ -37,9 +37,12 @@ const usersScheema = new mongoose.Schema({
       message: 'Password and password confirm must same !'
     }
   },
-  resetToken: String,
-  resetTokenExp: Date,
   photo: String,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false
+  },
   changedAt: Date
 });
 
@@ -56,15 +59,8 @@ usersScheema.methods.testUpdatePassword = function(jwtTimeStamp) {
 };
 
 usersScheema.methods.createResetPassword = function(id) {
-  // const resetToken = crypto.randomBytes(32).toString('hex');
-
-  // this.resetToken = await bcrypt.hash(resetToken, 4);
-  // this.resetTokenExp = Date.now() + 10 * 60 * 1000;
-
-  // return resetToken;
-
-  const resetToken = jwt.sign({ id }, 'secretPassword', {
-    expiresIn: 1000 * 60 * 30
+  const resetToken = jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: Number(process.env.JWT_RESET)
   });
 
   return resetToken;
@@ -88,6 +84,11 @@ usersScheema.pre('save', function(next) {
 
 usersScheema.pre('update', function(next) {
   this.changedAt = Date.now() - 1000;
+  next();
+});
+
+usersScheema.pre(/^find/, function(next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 
