@@ -2,6 +2,9 @@ const express = require('express');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const mongooseSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const app = express();
 
@@ -31,6 +34,17 @@ app.use('/api', limiter);
 // body parser
 app.use(express.json());
 app.use(express.static(`${__dirname}/public`));
+
+// prevent data sanitize
+app.use(mongooseSanitize());
+app.use(xss());
+
+// prevent parameter p
+app.use(
+  hpp({
+    whitelist: ['duration', 'ratingsAverage', 'ratingsQuantity', 'difficulty', 'price']
+  })
+);
 
 app.use((req, res, next) => {
   req.reqTime = new Date().toUTCString();
