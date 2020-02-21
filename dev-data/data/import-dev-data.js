@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const fs = require('fs');
 
-const Tours = require('../../models/tours');
+const Tours = require('../../models/toursModels');
 
 // env configuration file
 dotenv.config({ path: './config.env' });
@@ -21,9 +21,7 @@ mongoose
   .catch(err => console.log(err));
 
 // read all tours data from the file
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8')
-);
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
 
 const deleteData = () => {
   Tours.deleteMany()
