@@ -13,6 +13,7 @@ const AppError = require('./utils/appError');
 const globalError = require('./controllers/errorHandler');
 const toursRouter = require('./routes/tourRoutes');
 const authRouter = require('./routes/authRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 // middleware
 // http secure headers
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
 // declare route
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 // ERROR 404 page not found error handling
 app.all('*', (req, res, next) => {

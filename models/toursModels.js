@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const Users = require('./usersModel');
+// const Users = require('./usersModel');
 // const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
@@ -92,7 +92,12 @@ const tourSchema = new mongoose.Schema(
         day: Number
       }
     ],
-    guides: Array
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Users'
+      }
+    ]
   },
   {
     toJSON: { virtuals: true },
@@ -110,12 +115,20 @@ tourSchema.pre('save', function(next) {
   next();
 });
 
-tourSchema.pre('save', async function(next) {
-  const guides = this.guides.map(async id => await Users.findById(id));
-  this.guides = await Promise.all(guides);
-
+tourSchema.pre(/^find/, function(next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -changedAt'
+  });
   next();
 });
+
+// tourSchema.pre('save', async function(next) {
+//   const guides = this.guides.map(async id => await Users.findById(id));
+//   this.guides = await Promise.all(guides);
+
+//   next();
+// });
 
 // post middleware run after pre save hooks middleware
 // tourSchema.post('save', function(doc, next) {
