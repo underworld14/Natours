@@ -113,6 +113,8 @@ tourSchema.pre('save', function(next) {
 tourSchema.pre('save', async function(next) {
   const guides = this.guides.map(async id => await Users.findById(id));
   this.guides = await Promise.all(guides);
+
+  next();
 });
 
 // post middleware run after pre save hooks middleware
