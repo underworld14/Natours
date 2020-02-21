@@ -105,8 +105,16 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// virtual prop
 tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
+});
+
+// virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Reviews',
+  foreignField: 'tour',
+  localField: '_id'
 });
 
 // Document Middleware run before save or create function
@@ -118,7 +126,7 @@ tourSchema.pre('save', function(next) {
 tourSchema.pre(/^find/, function(next) {
   this.populate({
     path: 'guides',
-    select: '-__v -changedAt'
+    select: '-__v -changedAt -email'
   });
   next();
 });

@@ -27,7 +27,10 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 });
 
 exports.getTourById = catchAsync(async (req, res, next) => {
-  const data = await Tours.findById(req.params.id);
+  const data = await Tours.findById(req.params.id).populate({
+    path: 'reviews',
+    select: 'review'
+  });
 
   if (!data) {
     return next(new AppErr('No data found with that ID !', 404));
