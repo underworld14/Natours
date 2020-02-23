@@ -5,14 +5,22 @@ const router = express.Router();
 // require the controllers
 const authControllers = require('../controllers/authController');
 const toursControllers = require('../controllers/tourControllers');
+// const reviewsControllers = require('../controllers/reviewController');
+
+const { protected, restrictTo } = authControllers;
 
 // params middleware
 // router.param("id", toursControllers.checkId);
 
-// our routes here
+// review router and nesting are here !!
+const reviewRoutes = require('../routes/reviewRoutes');
+// post tour/:tourId/reviews
+router.use('/:tourId/reviews', reviewRoutes); //post tour review
+
+// our tour routes here
 router
   .route('/')
-  .get(authControllers.protected, toursControllers.getAllTours)
+  .get(protected, toursControllers.getAllTours)
   .post(toursControllers.postTour);
 
 router.route('/tours-stats').get(toursControllers.getToursStats);
@@ -24,10 +32,6 @@ router
   .route('/:id')
   .get(toursControllers.getTourById)
   .patch(toursControllers.updateTour)
-  .delete(
-    authControllers.protected,
-    authControllers.restrictTo('admin', 'lead-guide'),
-    toursControllers.deleteTour
-  );
+  .delete(protected, restrictTo('admin', 'lead-guide'), toursControllers.deleteTour);
 
 module.exports = router;

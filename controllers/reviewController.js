@@ -5,8 +5,8 @@ exports.postReviews = catchAsync(async (req, res, next) => {
   const post = {
     review: req.body.review,
     rating: req.body.rating,
-    tour: req.body.tour,
-    user: req.user._id
+    tour: req.body.tour || req.params.tourId,
+    user: req.body.user || req.user._id
   };
 
   const review = await Reviews.create(post);
@@ -19,20 +19,14 @@ exports.postReviews = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllReviews = catchAsync(async (req, res, next) => {
-  const review = await Reviews.find();
+  let filter = {};
+  if (req.params.tourId) filter = { tour: req.params.tourId };
+
+  const review = await Reviews.find(filter);
 
   res.status(200).json({
     status: 'success',
     results: review.length,
-    review
-  });
-});
-
-exports.getReviewsById = catchAsync(async (req, res, next) => {
-  const review = await Reviews.findById(req.params.id);
-
-  res.status(200).json({
-    status: 'success',
     review
   });
 });

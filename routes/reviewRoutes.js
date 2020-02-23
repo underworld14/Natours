@@ -1,14 +1,12 @@
-const Router = require('express').Router();
+const Router = require('express').Router({ mergeParams: true });
 const authController = require('../controllers/authController');
 const reviewController = require('../controllers/reviewController');
 
-const { protected } = authController;
-const { getAllReviews, postReviews, getReviewsById } = reviewController;
+const { protected, restrictTo } = authController;
+const { getAllReviews, postReviews } = reviewController;
 
 Router.route('/')
   .get(getAllReviews)
-  .post(protected, postReviews);
-
-Router.route('/:id').get(protected, getReviewsById);
+  .post(protected, restrictTo('user'), postReviews);
 
 module.exports = Router;
