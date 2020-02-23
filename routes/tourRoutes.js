@@ -20,8 +20,8 @@ router.use('/:tourId/reviews', reviewRoutes); //post tour review
 // our tour routes here
 router
   .route('/')
-  .get(protected, toursControllers.getAllTours)
-  .post(toursControllers.postTour);
+  .get(toursControllers.getAllTours)
+  .post(protected, restrictTo('admin', 'lead-guide'), toursControllers.postTour);
 
 router.route('/tours-stats').get(toursControllers.getToursStats);
 router.route('/monthly-plan/:year').get(toursControllers.getMonthlyPlan);
@@ -31,7 +31,7 @@ router.route('/top-cheap').get(toursControllers.aliasTopCheaps, toursControllers
 router
   .route('/:id')
   .get(toursControllers.getTourById)
-  .patch(toursControllers.updateTour)
+  .patch(protected, restrictTo('admin', 'lead-guide'), toursControllers.updateTour)
   .delete(protected, restrictTo('admin', 'lead-guide'), toursControllers.deleteTour);
 
 module.exports = router;
