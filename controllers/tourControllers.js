@@ -2,6 +2,7 @@ const ApiFeatures = require('../utils/apiFeatures');
 const Tours = require('../models/toursModels');
 const catchAsync = require('../utils/catchAsync');
 const AppErr = require('../utils/appError');
+const factory = require('./handlerFactory');
 
 exports.aliasTopCheaps = (req, res, next) => {
   req.query.limit = '5';
@@ -42,41 +43,11 @@ exports.getTourById = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.postTour = catchAsync(async (req, res, next) => {
-  const data = await Tours.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data
-  });
-});
+exports.postTour = factory.createData(Tours);
 
-exports.updateTour = catchAsync(async (req, res, next) => {
-  const data = await Tours.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true
-  });
+exports.updateTour = factory.updateData(Tours);
 
-  if (!data) {
-    return next(new AppErr('No data found with that ID !', 404));
-  }
-
-  res.status(201).json({
-    status: 'success',
-    data
-  });
-});
-
-exports.deleteTour = catchAsync(async (req, res, next) => {
-  const data = await Tours.findByIdAndDelete(req.params.id);
-
-  if (!data) {
-    return next(new AppErr('No data found with that ID !', 404));
-  }
-
-  res.status(202).json({
-    status: 'success'
-  });
-});
+exports.deleteTour = factory.deleteOne(Tours);
 
 exports.getToursStats = catchAsync(async (req, res, next) => {
   const data = await Tours.aggregate([
