@@ -32,7 +32,8 @@ const tourSchema = new mongoose.Schema(
     },
     ratingsAverage: {
       type: Number,
-      default: 3.0
+      default: 3,
+      set: val => Math.round(val * 10) / 10
     },
     ratingsQuantity: {
       type: Number,
@@ -159,6 +160,9 @@ tourSchema.pre('aggregate', function(next) {
   this.pipeline().unshift({ $match: { secret: { $ne: true } } });
   next();
 });
+
+// indexes
+tourSchema.index({ price: 1, ratingsAverage: -1 });
 
 const Tours = mongoose.model('Tours', tourSchema);
 
