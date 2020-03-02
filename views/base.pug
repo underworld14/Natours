@@ -1,0 +1,36 @@
+html
+  head
+    meta(charset='UTF-8')
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    link(
+      href='https://fonts.googleapis.com/css?family=Lato:300,300i,700'
+      rel='stylesheet')
+    link(rel="shortcut icon" type="image/png" href="img/favicon.png") 
+    link(rel='stylesheet' href='css/style.css')
+    title= title
+
+  body
+  //- header
+  header.header
+    nav.nav.nav--tours
+      a.nav__el(href='/overview.html') All Tours
+      form.nav__search
+        button.nav__search-btn
+        svg
+          use(xlink:href='img/icons.svg#icon-search')
+          input(type='text' placeholder='Search tours' class='nav__search-input')
+
+    .header__logo
+      img(src='img/logo-white.png' alt='Natours logo')
+
+    nav.nav.nav--user
+      a.nav__el(href='#') My Bookings
+      button.nav__el Log Out
+
+      a.nav__el(href='#') 
+        img.nav__user-img(src='img/user.jpg' alt='User photo')
+        span Joonas
+
+      button.nav__el Log In
+      button.nav__el.nav__el--cta Sign Up
+

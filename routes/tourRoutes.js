@@ -28,6 +28,10 @@ router.route('/monthly-plan/:year').get(toursControllers.getMonthlyPlan);
 
 router.route('/top-cheap').get(toursControllers.aliasTopCheaps, toursControllers.getAllTours);
 
+router.get('/tours-within/:dist/:latlng/:unit', toursControllers.getWithIn);
+
+router.get('/get-distances/:latlng/:unit', toursControllers.getDistances);
+
 router
   .route('/:id')
   .get(toursControllers.getTourById)

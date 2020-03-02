@@ -1,4 +1,6 @@
+const path = require('path');
 const express = require('express');
+const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -17,8 +19,15 @@ const authRouter = require('./routes/authRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 
 // middleware
+// cors
+app.use(cors());
+
 // http secure headers
 app.use(helmet());
+
+// view engine
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
 // development logger
 if (process.env.NODE_ENV !== 'production') {
@@ -51,6 +60,14 @@ app.use(
 app.use((req, res, next) => {
   req.reqTime = new Date().toUTCString();
   next();
+});
+
+// template engine routes
+app.get('/', (req, res) => {
+  res.status(200).render('base', {
+    title: 'Natours',
+    tour: 'Jalan Jalan di Malang'
+  });
 });
 
 // declare route

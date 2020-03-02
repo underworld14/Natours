@@ -12,7 +12,6 @@ exports.aliasTopCheaps = (req, res, next) => {
 };
 
 exports.getAllTours = catchAsync(async (req, res, next) => {
-  console.log(req.query);
   const getTours = new ApiFeatures(Tours.find(), req.query)
     .filtering()
     .sorting()
@@ -112,6 +111,64 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   ]);
   res.status(200).json({
     status: 'success',
+    data
+  });
+});
+
+exports.getWithIn = catchAsync(async (req, res, next) => {
+  const { dist, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+  const radius = unit === 'mi' ? dist / 3963.2 : dist / 6378.1;
+
+  console.log(lat, lng);
+
+  if (!lat || !lng) {
+    return next(new AppErr('Please Provide langtitude, latitude right format !', 400));
+  }
+
+  const data = await Tours.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } }
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: data.length,
+    data
+  });
+});
+
+exports.getDistances = catchAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+  if (!lat || !lng) {
+    return next(new AppErr('Please Provide langtitude, latitude right format !', 400));
+  }
+
+  const data = await Tours.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [lng * 1, lat * 1]
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multiplier
+      }
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1
+      }
+    }
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    results: data.length,
     data
   });
 });
