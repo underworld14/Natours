@@ -1,5 +1,7 @@
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
+const sharp = require('sharp');
+
 const Users = require('../models/usersModel');
 const catchAsync = require('../utils/catchAsync');
 const AppErr = require('../utils/appError');
@@ -86,19 +88,39 @@ exports.getMe = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.processUsrImg = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 80 })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
+});
+
 exports.updateUser = catchAsync(async (req, res, next) => {
-  const user = await Users.findByIdAndUpdate(req.user._id, req.body, {
+  if (req.body.password || req.body.confirmPassword) {
+    return next(new AppErr('Dont update password here !', 400));
+  }
+
+  const newData = req.body;
+  if (req.file) {
+    newData.photo = `${req.protocol}://${req.get('host')}/img/users/${req.file.filename}`;
+  }
+
+  const data = await Users.findByIdAndUpdate(req.user._id, req.body, {
     runValidators: false,
     new: true
   });
 
-  // remove password from the response
-  user.password = undefined;
-
   res.status(201).json({
     status: 'success',
     message: 'Users successfull updated',
-    user
+    data
   });
 });
 

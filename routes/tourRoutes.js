@@ -6,6 +6,7 @@ const router = express.Router();
 const authControllers = require('../controllers/authController');
 const toursControllers = require('../controllers/tourControllers');
 // const reviewsControllers = require('../controllers/reviewController');
+const { upToursImg } = require('../utils/uploadImage');
 
 const { protected, restrictTo } = authControllers;
 
@@ -35,7 +36,13 @@ router.get('/get-distances/:latlng/:unit', toursControllers.getDistances);
 router
   .route('/:id')
   .get(toursControllers.getTourById)
-  .patch(protected, restrictTo('admin', 'lead-guide'), toursControllers.updateTour)
+  .patch(
+    protected,
+    restrictTo('admin', 'lead-guide'),
+    upToursImg,
+    toursControllers.processTourImg,
+    toursControllers.updateTour
+  )
   .delete(protected, restrictTo('admin', 'lead-guide'), toursControllers.deleteTour);
 
 module.exports = router;

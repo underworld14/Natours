@@ -1,3 +1,5 @@
+const sharp = require('sharp');
+
 const ApiFeatures = require('../utils/apiFeatures');
 const Tours = require('../models/toursModels');
 const catchAsync = require('../utils/catchAsync');
@@ -43,6 +45,40 @@ exports.getTourById = catchAsync(async (req, res, next) => {
 });
 
 exports.postTour = factory.createData(Tours);
+
+exports.processTourImg = catchAsync(async (req, res, next) => {
+  if (req.files.imageCover) {
+    const coverName = `tours-${req.params.id}-${Date.now()}-covers.jpeg`;
+    req.body.imageCover = `${req.protocol}://${req.get('host')}/img/tours/${coverName}`;
+
+    await sharp(req.files.imageCover[0].buffer)
+      .resize(2000, 1333)
+      .toFormat('jpeg')
+      .jpeg({ quality: 80 })
+      .toFile(`public/img/tours/${coverName}`);
+  }
+
+  if (req.files.images) {
+    req.body.images = [];
+
+    await Promise.all(
+      req.files.images.map(async (file, i) => {
+        const filename = `tours-${req.params.id}-${Date.now()}-${i + 1}.jpeg`;
+        const resName = `${req.protocol}://${req.get('host')}/img/tours/${filename}`;
+
+        await sharp(file.buffer)
+          .resize(2000, 1333)
+          .toFormat('jpeg')
+          .jpeg({ quality: 80 })
+          .toFile(`public/img/tours/${filename}`);
+
+        req.body.images.push(resName);
+      })
+    );
+  }
+
+  next();
+});
 
 exports.updateTour = factory.updateData(Tours);
 
